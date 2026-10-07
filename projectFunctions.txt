@@ -1,0 +1,1225 @@
+# Employee Leave Management System
+---
+
+## 1. Project Overview
+
+The Employee Leave Management System allows an organization to manage employee leave information.
+
+The application provides functionality to:
+
+- Display all employees
+- Apply for leave
+- Check leave balance
+- Display employee details
+- Display leave history
+- Display employees currently on leave
+- Display available leave types
+- Exit the application
+
+
+
+---
+
+# 2. Project Goal
+
+Instead of putting everything inside one large `while` loop, the application is divided into multiple functions.
+
+### Basic idea
+
+```text
+Large Program
+     ↓
+Identify responsibilities
+     ↓
+Create functions
+     ↓
+Connect functions
+     ↓
+Add generators
+     ↓
+Add decorators
+     ↓
+Complete Mini Backend
+```
+
+---
+
+# 3. Project Architecture
+
+The project follows a simple functional architecture.
+
+```text
+                    APPLICATION
+                         │
+                         ▼
+                    MAIN LOOP
+                         │
+                         ▼
+                  display_title()
+                         │
+                         ▼
+                   display_menu()
+                         │
+                         ▼
+                    User Choice
+                         │
+       ┌─────────────────┼─────────────────┐
+       │                 │                 │
+       ▼                 ▼                 ▼
+ Display             Apply Leave       Check Balance
+ Employees               │                  │
+                         │                  │
+                         ▼                  ▼
+                  validate_leave()   get_employee_name()
+                         │
+                         ├── employee_exists()
+                         │
+                         ▼
+                  create_leave_record()
+                         │
+                         ▼
+                   leave_history
+```
+
+---
+
+# 4. Data Layer
+
+The application starts with its data.
+
+## 4.1 employees
+
+```python
+employees = {
+    101: {"name": "Rahul", "department": "CSE"},
+    102: {"name": "Priya", "department": "ECE"}
+}
+```
+
+### Data Structure
+
+`Dictionary`
+
+### Purpose
+
+Stores employee information.
+
+```text
+Employee ID
+     ↓
+Employee Details
+     ↓
+Name + Department
+```
+
+---
+
+## 4.2 leave_types
+
+```python
+leave_types = (
+    "Casual",
+    "Sick",
+    "Emergency"
+)
+```
+
+### Data Structure
+
+`Tuple`
+
+### Purpose
+
+Stores fixed leave types.
+
+---
+
+## 4.3 menu
+
+```python
+menu = (
+    "Display Employees",
+    "Apply Leave",
+    "Check Leave Balance",
+    ...
+)
+```
+
+### Data Structure
+
+`Tuple`
+
+### Purpose
+
+Stores the application's fixed menu options.
+
+---
+
+## 4.4 employees_on_leave
+
+```python
+employees_on_leave = set()
+```
+
+### Data Structure
+
+`Set`
+
+### Purpose
+
+Stores unique employee IDs of employees who are currently on leave.
+
+---
+
+## 4.5 leave_history
+
+```python
+leave_history = []
+```
+
+### Data Structure
+
+`List`
+
+### Purpose
+
+Stores all leave application records.
+
+Each record is a dictionary.
+
+```python
+{
+    "employee_id": 101,
+    "leave_type": "Sick",
+    "days": 2
+}
+```
+
+---
+
+## 4.6 leave_balance
+
+```python
+leave_balance = {
+    101: 20,
+    102: 20
+}
+```
+
+### Data Structure
+
+`Dictionary`
+
+### Purpose
+
+Stores the remaining leave balance for every employee.
+
+---
+
+# 5. Function Hierarchy
+
+The function hierarchy shows **which function calls which other function**.
+
+```text
+MAIN PROGRAM
+│
+├── display_title()
+│
+├── display_menu()
+│   │
+│   └── menu_generator()
+│
+├── Choice 1
+│   └── display_employees()
+│       └── @log_activity
+│
+├── Choice 2
+│   └── apply_leave()
+│       │
+│       ├── @log_activity
+│       │
+│       ├── validate_leave()
+│       │   └── employee_exists()
+│       │
+│       ├── create_leave_record()
+│       │
+│       └── print_message()
+│
+├── Choice 3
+│   └── check_leave_balance()
+│       │
+│       └── get_employee_name()
+│           └── get_employee()
+│
+├── Choice 4
+│   └── employee_details()
+│       │
+│       └── get_employee()
+│
+├── Choice 5
+│   └── display_leave_history()
+│       │
+│       └── leave_history_generator()
+│
+├── Choice 6
+│   └── employees_currently_on_leave()
+│       │
+│       └── get_employee_name()
+│           └── get_employee()
+│
+└── Choice 7
+    └── display_leave_types()
+```
+
+---
+
+# 6. Complete Function List
+
+| Function | Called By | Calls | Purpose |
+|---|---|---|---|
+| `display_title()` | Main | Nothing | Display heading |
+| `display_menu()` | Main | `menu_generator()` | Display menu |
+| `menu_generator()` | `display_menu()` | Nothing | Generate menu items |
+| `get_employee()` | Other functions | Nothing | Retrieve employee |
+| `employee_exists()` | `validate_leave()` / Main | Nothing | Check employee ID |
+| `get_employee_name()` | Other functions | `get_employee()` | Retrieve employee name |
+| `print_message()` | `apply_leave()` | Nothing | Print multiple messages |
+| `create_leave_record()` | `apply_leave()` | Nothing | Create leave dictionary |
+| `validate_leave()` | `apply_leave()` | `employee_exists()` | Validate leave request |
+| `apply_leave()` | Main | Several functions | Apply leave |
+| `display_employees()` | Main | Nothing | Display employees |
+| `check_leave_balance()` | Main | `get_employee_name()` | Display balance |
+| `employee_details()` | Main | `get_employee()` | Display employee details |
+| `leave_history_generator()` | `display_leave_history()` | Nothing | Generate history records |
+| `display_leave_history()` | Main | Generator | Display history |
+| `employees_currently_on_leave()` | Main | `get_employee_name()` | Display employees on leave |
+| `display_leave_types()` | Main / Apply Leave | Nothing | Display leave types |
+| `log_activity()` | Decorator | Wrapped function | Add logging behavior |
+| `wrapper()` | Decorator system | Original function | Execute decorated function |
+| `generate_report()` | Demonstration | Nothing | Demonstrate `*args` and `**kwargs` |
+
+---
+
+# 7. Function Call Flow
+
+## 7.1 Application Startup
+
+```text
+Program starts
+      ↓
+while True
+      ↓
+display_title()
+      ↓
+display_menu()
+      ↓
+menu_generator()
+      ↓
+User selects option
+```
+
+---
+
+# 8. Display Employees Flow
+
+When the user selects:
+
+```text
+1. Display Employees
+```
+
+The flow is:
+
+```text
+Main Program
+     ↓
+display_employees()
+     ↓
+@log_activity
+     ↓
+wrapper()
+     ↓
+display_employees() executes
+     ↓
+employees.items()
+     ↓
+Employee information displayed
+```
+
+---
+
+# 9. Apply Leave Flow
+
+This is the most important function flow in the project.
+
+User selects:
+
+```text
+2. Apply Leave
+```
+
+Then:
+
+```text
+MAIN
+ │
+ ▼
+User enters Employee ID
+ │
+ ▼
+employee_exists()
+ │
+ ├── False → Employee not found
+ │
+ └── True
+      │
+      ▼
+display_leave_types()
+      │
+      ▼
+User selects leave type
+      │
+      ▼
+User enters number of days
+      │
+      ▼
+apply_leave()
+      │
+      ▼
+validate_leave()
+      │
+      ├── employee_exists()
+      │
+      ├── Check leave type
+      │
+      ├── Check days
+      │
+      └── Check balance
+      │
+      ▼
+selected_leave
+      │
+      ▼
+Update leave_balance
+      │
+      ▼
+employees_on_leave.add()
+      │
+      ▼
+create_leave_record()
+      │
+      ▼
+leave_history.append()
+      │
+      ▼
+print_message()
+      │
+      ▼
+Leave Approved
+```
+
+---
+
+# 10. Leave Balance Flow
+
+```text
+Main
+  ↓
+check_leave_balance(employee_id)
+  ↓
+get_employee_name(employee_id)
+  ↓
+get_employee(employee_id)
+  ↓
+Employee name
+  ↓
+Calculate:
+Total Leaves - Remaining Leaves
+  ↓
+Display result
+```
+
+Example:
+
+```text
+Total Leaves = 20
+Remaining = 15
+
+Used Leaves = 20 - 15
+
+Used Leaves = 5
+```
+
+---
+
+# 11. Employee Details Flow
+
+```text
+Main
+  ↓
+employee_details(employee_id)
+  ↓
+get_employee(employee_id)
+  ↓
+Employee Dictionary
+  ↓
+Display:
+    Employee ID
+    Name
+    Department
+    Remaining Leaves
+```
+
+---
+
+# 12. Leave History Flow
+
+This part demonstrates a **Generator**.
+
+```text
+Main
+  ↓
+display_leave_history()
+  ↓
+leave_history_generator()
+  ↓
+yield record 1
+  ↓
+yield record 2
+  ↓
+yield record 3
+  ↓
+...
+```
+
+Instead of returning all records at once:
+
+```python
+return leave_history
+```
+
+the generator provides records one at a time:
+
+```python
+yield leave
+```
+
+This becomes useful when the application has a very large amount of data.
+
+---
+
+# 13. Menu Generator Flow
+
+The menu is also generated using a generator.
+
+```text
+display_menu()
+      ↓
+menu_generator()
+      ↓
+yield (1, "Display Employees")
+      ↓
+yield (2, "Apply Leave")
+      ↓
+yield (3, "Check Leave Balance")
+      ↓
+...
+```
+
+This demonstrates that generators aren't only useful for large datasets; they can also provide sequential data.
+
+---
+
+# 14. Decorator Architecture
+
+The project uses:
+
+```python
+@log_activity
+```
+
+above important functions.
+
+Example:
+
+```python
+@log_activity
+def apply_leave(...):
+    ...
+```
+
+Python effectively treats it like:
+
+```python
+apply_leave = log_activity(apply_leave)
+```
+
+The structure is:
+
+```text
+              log_activity()
+                    │
+                    ▼
+                wrapper()
+                    │
+              ┌─────┴─────┐
+              │           │
+        Before function    │
+              │            │
+              ▼            │
+        Print operation    │
+                           ▼
+                     Original function
+                           │
+                           ▼
+                    Execute operation
+                           │
+                           ▼
+                     Return result
+```
+
+---
+
+# 15. Why `wrapper(*args, **kwargs)`?
+
+The decorator may be applied to functions having different arguments.
+
+For example:
+
+```python
+apply_leave(101, 2, 3)
+```
+
+and:
+
+```python
+check_leave_balance(101)
+```
+
+The decorator therefore uses:
+
+```python
+def wrapper(*args, **kwargs):
+```
+
+This allows the decorator to accept different numbers and types of arguments.
+
+---
+
+# 16. Function Arguments Used
+
+This project intentionally demonstrates different argument types.
+
+## Positional Arguments
+
+```python
+get_employee(101)
+```
+
+The value `101` is passed according to position.
+
+---
+
+## Default Argument
+
+```python
+def apply_leave(
+    employee_id,
+    leave_choice,
+    number_of_days=1
+):
+```
+
+If days aren't provided:
+
+```python
+apply_leave(101, 2)
+```
+
+Python uses:
+
+```text
+number_of_days = 1
+```
+
+---
+
+## `*args`
+
+```python
+def print_message(*messages):
+```
+
+Can receive:
+
+```python
+print_message(
+    "Leave approved",
+    "Employee: Rahul",
+    "Days: 2"
+)
+```
+
+All values are collected into a tuple.
+
+```text
+messages
+   ↓
+("Leave approved", "Employee: Rahul", "Days: 2")
+```
+
+---
+
+## `**kwargs`
+
+```python
+def create_leave_record(**details):
+```
+
+Called as:
+
+```python
+create_leave_record(
+    employee_id=101,
+    leave_type="Sick",
+    days=2
+)
+```
+
+The values are collected into a dictionary:
+
+```python
+{
+    "employee_id": 101,
+    "leave_type": "Sick",
+    "days": 2
+}
+```
+
+---
+
+# 17. Data Structure Architecture
+
+The project uses multiple Python data structures.
+
+```text
+                         APPLICATION DATA
+                               │
+          ┌────────────────────┼───────────────────┐
+          │                    │                   │
+          ▼                    ▼                   ▼
+      Dictionary             Tuple                Set
+          │                    │                   │
+          │                    │                   │
+     employees            leave_types       employees_on_leave
+     leave_balance             │
+          │                   menu
+          │
+          ▼
+       Dictionary
+          │
+          ▼
+    Individual Record
+          │
+          ▼
+         List
+          │
+          ▼
+    leave_history
+```
+
+---
+
+# 18. Why Each Data Structure?
+
+## Dictionary
+
+Used when we need:
+
+```text
+KEY → VALUE
+```
+
+Example:
+
+```text
+101 → Rahul
+```
+
+Useful for fast lookup using Employee ID.
+
+---
+
+## List
+
+Used for:
+
+```text
+Multiple leave records
+```
+
+Example:
+
+```text
+[
+    record1,
+    record2,
+    record3
+]
+```
+
+---
+
+## Tuple
+
+Used for fixed data:
+
+```text
+Casual
+Sick
+Emergency
+```
+
+and:
+
+```text
+Menu options
+```
+
+---
+
+## Set
+
+Used when duplicates should not exist:
+
+```text
+{101, 104, 108}
+```
+
+If `101` is added again, the set remains:
+
+```text
+{101, 104, 108}
+```
+
+---
+
+# 19. Backend-Style Design
+
+Although this is a console application, it is designed to behave like a small backend system.
+
+The conceptual architecture is:
+
+```text
+              USER
+               │
+               ▼
+         MENU / INPUT
+               │
+               ▼
+          MAIN PROGRAM
+               │
+               ▼
+        BUSINESS LOGIC
+               │
+       ┌───────┼────────┐
+       │       │        │
+       ▼       ▼        ▼
+   Validation  Leave   Employee
+              Logic    Logic
+       │       │        │
+       └───────┼────────┘
+               ▼
+             DATA
+               │
+       ┌───────┼────────┐
+       ▼       ▼        ▼
+    Employee  Balance  History
+```
+
+In a real backend, these responsibilities would eventually become:
+
+```text
+Frontend
+   ↓
+API
+   ↓
+Views / Controllers
+   ↓
+Business Logic
+   ↓
+Database
+```
+
+This project gives students the foundation for understanding that architecture.
+
+---
+
+# 20. Design Philosophy
+
+The project was designed using one important rule:
+
+> **Every function should have one clear responsibility.**
+
+For example, don't create one huge function:
+
+```python
+employee_management_system()
+```
+
+containing 300 lines.
+
+Instead:
+
+```text
+display_employees()
+apply_leave()
+check_leave_balance()
+employee_details()
+display_leave_history()
+```
+
+Each function handles one responsibility.
+
+This makes the application:
+
+- Easier to understand
+- Easier to test
+- Easier to debug
+- Easier to modify
+- Easier to extend
+
+---
+
+# 21. Function Dependency Diagram
+
+The complete dependency graph is:
+
+```text
+                         MAIN
+                          │
+          ┌───────────────┼─────────────────────┐
+          │               │                     │
+          ▼               ▼                     ▼
+ display_title()    display_menu()        User Choice
+                          │                     │
+                          ▼              ┌──────┼─────────────┐
+                  menu_generator()       │      │             │
+                                         ▼      ▼             ▼
+                                  display_   apply_      check_
+                                  employees  leave()     balance()
+                                                │             │
+                                                │             ▼
+                                                │      get_employee_name()
+                                                │             │
+                                                │             ▼
+                                                │       get_employee()
+                                                │
+                                                ▼
+                                        validate_leave()
+                                                │
+                                                ▼
+                                        employee_exists()
+                                                │
+                                                ▼
+                                      create_leave_record()
+                                                │
+                                                ▼
+                                        leave_history
+```
+
+And:
+
+```text
+employee_details()
+        │
+        ▼
+get_employee()
+
+
+display_leave_history()
+        │
+        ▼
+leave_history_generator()
+
+
+employees_currently_on_leave()
+        │
+        ▼
+get_employee_name()
+        │
+        ▼
+get_employee()
+```
+
+---
+
+# 22. Decorator Dependency
+
+```text
+log_activity()
+      │
+      ▼
+   wrapper()
+      │
+      ├───────────────┐
+      │               │
+      ▼               ▼
+display_employees()  apply_leave()
+      │               │
+      │               ▼
+      │       check_leave_balance()
+      │
+      ├── employee_details()
+      │
+      ├── display_leave_history()
+      │
+      └── employees_currently_on_leave()
+```
+
+The decorator adds common behavior without modifying the actual business logic.
+
+---
+
+# 23. Topics Covered
+
+### Python Fundamentals
+
+- Variables
+- Dictionaries
+- Lists
+- Tuples
+- Sets
+- `if/else`
+- `for` loops
+- `while` loops
+- `match-case`
+- `enumerate()`
+- `len()`
+- Dictionary methods
+- Set methods
+
+### Functions
+
+- Function creation
+- Function calling
+- Parameters
+- Arguments
+- Positional arguments
+- Default arguments
+- `*args`
+- `**kwargs`
+- Return values
+- Function composition
+
+### Advanced Functions
+
+- Nested functions
+- Decorators
+- Wrapper functions
+- Generator functions
+- `yield`
+
+---
+
+# 24. Suggested Teaching Order
+
+Don't teach the complete project in one shot.
+
+Build it progressively.
+
+### Stage 1 — Data Structures
+
+Teach:
+
+```text
+Dictionary
+List
+Tuple
+Set
+```
+
+Build the basic data.
+
+---
+
+### Stage 2 — Menu
+
+Teach:
+
+```text
+while True
+match-case
+enumerate()
+```
+
+Build the menu.
+
+---
+
+### Stage 3 — Functions
+
+Convert menu operations into functions:
+
+```text
+display_employees()
+apply_leave()
+check_leave_balance()
+employee_details()
+```
+
+---
+
+### Stage 4 — Function Arguments
+
+Introduce:
+
+```text
+Positional arguments
+Default arguments
+*args
+**kwargs
+```
+
+---
+
+### Stage 5 — Return Values
+
+Introduce:
+
+```python
+get_employee()
+employee_exists()
+validate_leave()
+```
+
+Students learn that functions don't always have to print something; they can **return data**.
+
+---
+
+### Stage 6 — Generator
+
+Introduce:
+
+```python
+yield
+```
+
+Create:
+
+```python
+leave_history_generator()
+menu_generator()
+```
+
+---
+
+### Stage 7 — Decorator
+
+Finally introduce:
+
+```python
+@log_activity
+```
+
+Students can now understand why decorators are useful.
+
+---
+
+# 25. Final Concept Map
+
+```text
+                     PYTHON MINI BACKEND
+                             │
+             ┌───────────────┴────────────────┐
+             │                                │
+        DATA STRUCTURES                    FUNCTIONS
+             │                                │
+     ┌───────┼────────┐             ┌────────┼────────┐
+     │       │        │             │        │        │
+ Dictionary List    Tuple          Basic   Arguments Return
+     │       │        │             │        │
+     │       │        │             │   ┌────┼────┐
+     │       │        │             │   │    │    │
+     │       │        │             │ Pos  Default *args
+     │       │        │             │             │
+     │       │        │             │           **kwargs
+     │       │        │             │
+     └───────┴────────┘             │
+             │                      │
+             ▼                      ▼
+        Leave System          Function Reuse
+                                    │
+                         ┌──────────┴─────────┐
+                         │                    │
+                         ▼                    ▼
+                    GENERATOR              DECORATOR
+                         │                    │
+                       yield              wrapper()
+                         │                    │
+                         └──────────┬─────────┘
+                                    ▼
+                         MINI BACKEND PROJECT
+```
+
+# 26. Future Upgrades
+
+Once students understand this version, the project can be upgraded further.
+
+### Level 2
+
+Add:
+
+- Admin login
+- Employee login
+- Password validation
+- Leave approval/rejection
+- Leave cancellation
+- Search employee
+- Department-wise employees
+
+### Level 3
+
+Replace dictionaries with a database:
+
+```text
+Python
+   ↓
+Django
+   ↓
+Django REST Framework
+   ↓
+MySQL
+```
+
+### Level 4
+
+Create REST APIs:
+
+```text
+GET     /employees
+GET     /employees/101
+POST    /leave
+GET     /leave/history
+GET     /leave/balance/101
+```
+
+### Level 5
+
+Connect a frontend:
+
+```text
+React
+   ↓
+REST API
+   ↓
+Django
+   ↓
+MySQL
+```
+
+---
+
+
+
+The current project is the **first step toward this architecture**.
